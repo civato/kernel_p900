@@ -36,6 +36,7 @@
 #include <linux/interrupt.h>
 #include <linux/io.h>
 #include <linux/pm_qos.h>
+#include <linux/sysfs_helpers.h>
 
 #include <mach/bts.h>
 #include <mach/map.h>
