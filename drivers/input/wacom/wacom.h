@@ -157,17 +157,27 @@
 
 #define COOR_WORK_AROUND
 
-#define WACOM_BOOSTER_CPU_FREQ1 1600000
-#define WACOM_BOOSTER_MIF_FREQ1 800000
-#define WACOM_BOOSTER_INT_FREQ1 400000
+static unsigned int WACOM_BOOSTER_CPU_FREQ1 = 1600000;
+static unsigned int WACOM_BOOSTER_MIF_FREQ1 = 800000;
+static unsigned int WACOM_BOOSTER_INT_FREQ1 = 400000;
 
-#define WACOM_BOOSTER_CPU_FREQ2 650000
-#define WACOM_BOOSTER_MIF_FREQ2 400000
-#define WACOM_BOOSTER_INT_FREQ2 222000
+static unsigned int WACOM_BOOSTER_CPU_FREQ2 = 650000;
+static unsigned int WACOM_BOOSTER_MIF_FREQ2 = 400000;
+static unsigned int WACOM_BOOSTER_INT_FREQ2 = 222000;
 
-#define WACOM_BOOSTER_CPU_FREQ3 650000
-#define WACOM_BOOSTER_MIF_FREQ3 400000
-#define WACOM_BOOSTER_INT_FREQ3 222000
+static unsigned int WACOM_BOOSTER_CPU_FREQ3 = 650000;
+static unsigned int WACOM_BOOSTER_MIF_FREQ3 = 400000;
+static unsigned int WACOM_BOOSTER_INT_FREQ3 = 222000;
+
+module_param_named(qos_wacom_cpu_freq_level_1, WACOM_BOOSTER_CPU_FREQ1, uint, S_IWUSR | S_IRUGO);
+module_param_named(qos_wacom_mif_freq_level_1, WACOM_BOOSTER_MIF_FREQ1, uint, S_IWUSR | S_IRUGO);
+module_param_named(qos_wacom_int_freq_level_1, WACOM_BOOSTER_INT_FREQ1, uint, S_IWUSR | S_IRUGO);
+module_param_named(qos_wacom_cpu_freq_level_2, WACOM_BOOSTER_CPU_FREQ2, uint, S_IWUSR | S_IRUGO);
+module_param_named(qos_wacom_mif_freq_level_2, WACOM_BOOSTER_MIF_FREQ2, uint, S_IWUSR | S_IRUGO);
+module_param_named(qos_wacom_int_freq_level_2, WACOM_BOOSTER_INT_FREQ2, uint, S_IWUSR | S_IRUGO);
+module_param_named(qos_wacom_cpu_freq_level_3, WACOM_BOOSTER_CPU_FREQ3, uint, S_IWUSR | S_IRUGO);
+module_param_named(qos_wacom_mif_freq_level_3, WACOM_BOOSTER_MIF_FREQ3, uint, S_IWUSR | S_IRUGO);
+module_param_named(qos_wacom_int_freq_level_3, WACOM_BOOSTER_INT_FREQ3, uint, S_IWUSR | S_IRUGO);
 
 #elif defined(CONFIG_N1A)
 
