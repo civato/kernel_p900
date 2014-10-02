@@ -707,7 +707,7 @@ static struct attribute *default_attrs[] = {
 	&scaling_max_freq_gpu.attr,
 	&scaling_cur_freq_gpu.attr,
 	&GPU_gov_table.attr,
-        &GPU_volt_table.attr,
+    &GPU_volt_table.attr,
 	NULL
 };
 
