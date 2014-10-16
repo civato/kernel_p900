@@ -1,7 +1,7 @@
 VERSION = 3
 PATCHLEVEL = 4
 SUBLEVEL = 39
-EXTRAVERSION =-bonuzzz-1.2-pro
+EXTRAVERSION =-bonuzzz-1.3-pro
 NAME = Saber-toothed Squirrel
 
 # *DOCUMENTATION*
