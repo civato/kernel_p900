@@ -1,7 +1,7 @@
 VERSION = 3
 PATCHLEVEL = 4
 SUBLEVEL = 39
-EXTRAVERSION =-bonuzzz-1.0-pro
+EXTRAVERSION =-bonuzzz-1.2-pro
 NAME = Saber-toothed Squirrel
 
 # *DOCUMENTATION*
@@ -245,8 +245,8 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 
 HOSTCC       = ccache gcc
 HOSTCXX      = ccache g++
-HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O3 -fomit-frame-pointer
-HOSTCXXFLAGS = -O3
+HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O3 -fomit-frame-pointer -fgcse-las
+HOSTCXXFLAGS = -O3 -fgcse-las
 
 # Decide whether to build built-in, modular, or both.
 # Normally, just do built-in.
@@ -347,11 +347,28 @@ CHECK		= sparse
 
 CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 		  -Wbitwise -Wno-return-void $(CF)
-LDFLAGS = -O1 --as-needed --relax --sort-common
+LDFLAGS = -O1 --as-needed --relax --sort-common -S
 CFLAGS_MODULE   = $(CFLAGS_KERNEL)
 AFLAGS_MODULE   =
-LDFLAGS_MODULE  =
-CFLAGS_KERNEL	= -marm -mfpu=neon-vfpv4 -ftree-vectorize -mvectorize-with-neon-quad -funsafe-math-optimizations -fmodulo-sched -fmodulo-sched-allow-regmoves -floop-interchange -ftree-loop-distribution -floop-strip-mine -floop-block -fgraphite-identity -fgcse-las -fgcse-sm
+LDFLAGS_MODULE  = $(LDFLAGS)
+#CFLAGS_KERNEL	= -marm -mfpu=neon-vfpv4 -ftree-vectorize -mvectorize-with-neon-quad -funsafe-math-optimizations \
+#-fmodulo-sched -fmodulo-sched-allow-regmoves -floop-interchange -ftree-loop-distribution \
+#-floop-strip-mine -floop-block -fgraphite-identity -fgcse-las -fgcse-sm -fivopts -munaligned-access
+
+CFLAGS_KERNEL	= -marm -mfpu=neon-vfpv4 -mvectorize-with-neon-quad -funsafe-math-optimizations -funsafe-loop-optimizations \
+-ftree-loop-im -ftree-loop-ivcanon -fivopts \
+-fmodulo-sched -fmodulo-sched-allow-regmoves -fgcse-las -fgcse-sm -munaligned-access
+
+
+#CFLAGS_KERNEL	= -marm -mfpu=neon-vfpv4 -funsafe-loop-optimizations -funsafe-math-optimizations \
+#					-mvectorize-with-neon-quad \
+#					-fgcse-sm -fgcse-las \
+#					-ftree-loop-im -ftree-loop-ivcanon -fivopts \
+#					-fweb -ftracer \
+#					-fsched-spec-load -fforce-addr -fsingle-precision-constant \
+#					-fsection-anchors -frename-registers \
+#					-fmodulo-sched -fmodulo-sched-allow-regmoves -munaligned-access
+
 AFLAGS_KERNEL	=
 CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage
 
@@ -365,7 +382,7 @@ LINUXINCLUDE    := -I$(srctree)/arch/$(hdr-arch)/include \
 
 KBUILD_CPPFLAGS := -D__KERNEL__
 
-KBUILD_CFLAGS   := -Wall -Werror -Wundef -Wstrict-prototypes -Wno-trigraphs \
+KBUILD_CFLAGS   := -DNDBUG -Wall -Werror -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security -Wno-unused \
@@ -565,6 +582,10 @@ else
 KBUILD_CFLAGS	+= -O2
 endif
 
+# conserve stack if available
+# do this early so that an architecture can override it.
+KBUILD_CFLAGS   += $(call cc-option,-fconserve-stack)
+
 include $(srctree)/arch/$(SRCARCH)/Makefile
 
 #ifneq ($(CONFIG_FRAME_WARN),0)
@@ -629,9 +650,6 @@ KBUILD_CFLAGS += $(call cc-disable-warning, pointer-sign)
 
 # disable invalid "can't wrap" optimizations for signed / pointers
 KBUILD_CFLAGS	+= $(call cc-option,-fno-strict-overflow)
-
-# conserve stack if available
-KBUILD_CFLAGS   += $(call cc-option,-fconserve-stack)
 
 # use the deterministic mode of AR if available
 KBUILD_ARFLAGS := $(call ar-option,D)
