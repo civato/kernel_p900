@@ -122,15 +122,15 @@ typedef struct _mali_dvfs_info{
 } mali_dvfs_info;
 
 static mali_dvfs_info mali_dvfs_infotbl[] = {
-	{812500, 100, 0, 40, 0, 160000, 83000, 250000},
-	{812500, 177, 41, 50, 0, 160000, 83000, 250000},
-	{862500, 266, 51, 60, 0, 400000, 222000, 250000},
-	{912500, 350, 61, 70, 0, 667000, 333000, 250000},
-	{962500, 420, 71, 80, 0, 800000, 400000, 250000},
-	{1000000, 480, 81, 85, 0, 800000, 400000, 650000},
-	{1037500, 533, 86, 90, 0, 800000, 400000, 1200000},
-	{1050000, 600, 91, 95, 0, 800000, 400000, 1400000},
-    {1075000, 667, 96, 99, 0, 800000, 400000, 1600000},
+	{812500, 100, 0, 90, 0, 160000, 83000, 250000},
+	{812500, 177, 53, 90, 0, 160000, 83000, 250000},
+	{862500, 266, 60, 90, 0, 400000, 222000, 250000},
+	{912500, 350, 70, 90, 0, 667000, 333000, 250000},
+	{962500, 420, 78, 99, 0, 800000, 400000, 250000},
+	{1000000, 480, 88, 90, 0, 800000, 400000, 650000},
+	{1037500, 533, 91, 95, 0, 800000, 400000, 1200000},
+	{1050000, 600, 96, 98, 0, 800000, 400000, 1400000},
+	{1075000, 667, 99, 100, 0, 800000, 400000, 1600000},
 };
 
 #define MALI_DVFS_STEP	ARRAY_SIZE(mali_dvfs_infotbl)
@@ -224,21 +224,23 @@ void hlpr_set_gpu_gov_table(int gpu_table[])
 	}
 }
 
+static int gov_table[10][10] = {
+	{ 100 },
+	{ 100, 50 },
+	{ 100, 67, 30 },
+	{ 100, 90, 70, 40 },
+	{ 100, 90, 70, 50, 30 },
+	{ 100, 90, 80, 70, 50, 30 },
+	{ 100, 90, 70, 50, 30, 20, 20 },
+	{ 100, 95, 90, 80, 65, 45, 30, 20 },
+	{ 100, 95, 90, 80, 70, 50, 30, 30, 20 },
+	{ 100, 95, 90, 80, 70, 50, 40, 30, 30, 20 },
+};
 
 void hlpr_set_min_max_G3D(unsigned int min, unsigned int max)
 {
 	int i;
-	int tbl0[1] = { 100 };
-	int tbl1[2] = { 100, 50 };
-	int tbl2[3] = { 100, 67, 30 };
-	int tbl3[4] = { 100, 90, 70, 40 };
-	int tbl4[5] = { 100, 90, 70, 60, 40 };
-	int tbl5[6] = { 100, 90, 80, 70, 55, 40 };
-	int tbl6[7] = { 100, 90, 80, 70, 60, 50, 40 };
-	int tbl7[8] = { 100, 90, 85, 75, 65, 55, 50, 40 };
-	int tbl8[9] = { 100, 90, 80, 70, 65, 60, 55, 50, 40 };
-	int tbl9[10] = { 100, 90, 80, 70, 65, 60, 55, 50, 45, 40 };
-	
+
 	for (i = 0; i < MALI_DVFS_STEP; i++)
 	{
 		if (mali_dvfs_infotbl[i].clock == min)
@@ -249,27 +251,8 @@ void hlpr_set_min_max_G3D(unsigned int min, unsigned int max)
 			dvfs_step_max_minus1 = mali_dvfs_infotbl[i-1].clock;
 		}
 	}
-	
-	if (dvfs_step_max - dvfs_step_min == 1)
-		hlpr_set_gpu_gov_table(tbl0);
-	else if (dvfs_step_max - dvfs_step_min == 2)
-		hlpr_set_gpu_gov_table(tbl1);
-	else if (dvfs_step_max - dvfs_step_min == 3)
-		hlpr_set_gpu_gov_table(tbl2);
-	else if (dvfs_step_max - dvfs_step_min == 4)
-		hlpr_set_gpu_gov_table(tbl3);
-	else if (dvfs_step_max - dvfs_step_min == 5)
-		hlpr_set_gpu_gov_table(tbl4);
-	else if (dvfs_step_max - dvfs_step_min == 6)
-		hlpr_set_gpu_gov_table(tbl5);
-	else if (dvfs_step_max - dvfs_step_min == 7)
-		hlpr_set_gpu_gov_table(tbl6);
-	else if (dvfs_step_max - dvfs_step_min == 8)
-		hlpr_set_gpu_gov_table(tbl7);
-	else if (dvfs_step_max - dvfs_step_min == 9)
-		hlpr_set_gpu_gov_table(tbl8);
-	else if (dvfs_step_max - dvfs_step_min == 10)
-		hlpr_set_gpu_gov_table(tbl9);
+
+	hlpr_set_gpu_gov_table(gov_table[dvfs_step_max - dvfs_step_min - 1]);
 }
 
 static int mali_dvfs_update_asv(int cmd)
@@ -563,6 +546,8 @@ int kbase_platform_dvfs_init(struct kbase_device *kbdev)
 #endif
 	spin_unlock_irqrestore(&mali_dvfs_spinlock, flags);
 
+	hlpr_set_min_max_G3D(MALI_DVFS_START_FREQ, MALI_DVFS_BL_CONFIG_FREQ);
+	
 	return MALI_TRUE;
 }
 
