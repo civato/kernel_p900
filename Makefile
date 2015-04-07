@@ -1,7 +1,7 @@
 VERSION = 3
 PATCHLEVEL = 4
 SUBLEVEL = 39
-EXTRAVERSION =-bonuzzz-1.3-pro
+EXTRAVERSION =~CivZ-P900-Rev4.0~
 NAME = Saber-toothed Squirrel
 
 # *DOCUMENTATION*
@@ -158,6 +158,8 @@ VPATH		:= $(srctree)$(if $(KBUILD_EXTMOD),:$(KBUILD_EXTMOD))
 
 export srctree objtree VPATH
 
+CCACHE	:= ccache
+
 
 # SUBARCH tells the usermode build what the underlying arch is.  That is set
 # first, and if a usermode build is happening, the "ARCH=um" on the command
@@ -192,8 +194,8 @@ SUBARCH := $(shell uname -m | sed -e s/i.86/i386/ -e s/sun4u/sparc64/ \
 # Default value for CROSS_COMPILE is not to prefix executables
 # Note: Some architectures assign CROSS_COMPILE in their arch/*/Makefile
 export KBUILD_BUILDHOST := $(SUBARCH)
-ARCH		?= arm
-CROSS_COMPILE	?= /opt/toolchains/arm-eabi-4.6/bin/arm-eabi-
+ARCH		?= $(SUBARCH)
+CROSS_COMPILE	?= $(CONFIG_CROSS_COMPILE:"%"=%)
 
 # Architecture as present in compile.h
 UTS_MACHINE 	:= $(ARCH)
@@ -243,10 +245,10 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 	  else if [ -x /bin/bash ]; then echo /bin/bash; \
 	  else echo sh; fi ; fi)
 
-HOSTCC       = ccache gcc
-HOSTCXX      = ccache g++
-HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O3 -fomit-frame-pointer -fgcse-las
-HOSTCXXFLAGS = -O3 -fgcse-las
+HOSTCC       = $(CCACHE) gcc
+HOSTCXX      = $(CCACHE) g++
+HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer -std=gnu89
+HOSTCXXFLAGS = -O2
 
 # Decide whether to build built-in, modular, or both.
 # Normally, just do built-in.
@@ -329,8 +331,8 @@ include $(srctree)/scripts/Kbuild.include
 # Make variables (CC, etc...)
 
 AS		= $(CROSS_COMPILE)as
-LD		= $(CROSS_COMPILE)ld.gold
-CC		= ccache $(CROSS_COMPILE)gcc
+LD		= $(CROSS_COMPILE)ld
+CC		= $(CROSS_COMPILE)gcc
 CPP		= $(CC) -E
 AR		= $(CROSS_COMPILE)ar
 NM		= $(CROSS_COMPILE)nm
@@ -347,28 +349,16 @@ CHECK		= sparse
 
 CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 		  -Wbitwise -Wno-return-void $(CF)
-LDFLAGS = -O1 --as-needed --relax --sort-common -S
-CFLAGS_MODULE   = $(CFLAGS_KERNEL)
-AFLAGS_MODULE   =
-LDFLAGS_MODULE  = $(LDFLAGS)
-#CFLAGS_KERNEL	= -marm -mfpu=neon-vfpv4 -ftree-vectorize -mvectorize-with-neon-quad -funsafe-math-optimizations \
-#-fmodulo-sched -fmodulo-sched-allow-regmoves -floop-interchange -ftree-loop-distribution \
-#-floop-strip-mine -floop-block -fgraphite-identity -fgcse-las -fgcse-sm -fivopts -munaligned-access
-
-CFLAGS_KERNEL	= -marm -mfpu=neon-vfpv4 -mvectorize-with-neon-quad -funsafe-math-optimizations -funsafe-loop-optimizations \
--ftree-loop-im -ftree-loop-ivcanon -fivopts \
--fmodulo-sched -fmodulo-sched-allow-regmoves -fgcse-las -fgcse-sm -munaligned-access
-
-
-#CFLAGS_KERNEL	= -marm -mfpu=neon-vfpv4 -funsafe-loop-optimizations -funsafe-math-optimizations \
-#					-mvectorize-with-neon-quad \
-#					-fgcse-sm -fgcse-las \
-#					-ftree-loop-im -ftree-loop-ivcanon -fivopts \
-#					-fweb -ftracer \
-#					-fsched-spec-load -fforce-addr -fsingle-precision-constant \
-#					-fsection-anchors -frename-registers \
-#					-fmodulo-sched -fmodulo-sched-allow-regmoves -munaligned-access
-
+KERNEL_FLAGS	= -munaligned-access -mfpu=neon-vfpv4 \
+		  -fgcse-after-reload -fgcse-sm \
+		  -fgcse-las -ftree-loop-im -ftree-loop-ivcanon -fweb \
+		  -frename-registers -ftree-vectorize \
+		  -fmodulo-sched -ffast-math -funsafe-math-optimizations \
+		  -std=gnu89
+CFLAGS_MODULE   = -DMODULE $(KERNEL_FLAGS)
+AFLAGS_MODULE   = -DMODULE $(KERNEL_FLAGS)
+LDFLAGS_MODULE  =
+CFLAGS_KERNEL	= $(KERNEL_FLAGS)
 AFLAGS_KERNEL	=
 CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage
 
@@ -382,16 +372,20 @@ LINUXINCLUDE    := -I$(srctree)/arch/$(hdr-arch)/include \
 
 KBUILD_CPPFLAGS := -D__KERNEL__
 
-KBUILD_CFLAGS   := -DNDBUG -Wall -Werror -Wundef -Wstrict-prototypes -Wno-trigraphs \
+KBUILD_CFLAGS   := -Wall -Werror -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common \
 		   -Werror-implicit-function-declaration \
+		   -Wno-deprecated-declarations \
+	 	   -Wno-maybe-uninitialized \
 		   -Wno-format-security -Wno-unused \
-		   -fno-delete-null-pointer-checks
+		   -Wno-array-bounds \
+		   -fno-delete-null-pointer-checks \
+		   $(KERNEL_FLAGS)
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS   := -D__ASSEMBLY__
 KBUILD_AFLAGS_MODULE  := -DMODULE
-KBUILD_CFLAGS_MODULE  := -DMODULE -fno-pic
+KBUILD_CFLAGS_MODULE  := -DMODULE
 KBUILD_LDFLAGS_MODULE := -T $(srctree)/scripts/module-common.lds
 
 # Read KERNELRELEASE from include/config/kernel.release (if it exists)
@@ -577,7 +571,7 @@ endif # $(dot-config)
 all: vmlinux
 
 ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
-KBUILD_CFLAGS	+= -Os
+KBUILD_CFLAGS	+= -Os $(call cc-disable-warning,maybe-uninitialized,)
 else
 KBUILD_CFLAGS	+= -O2
 endif
@@ -650,6 +644,15 @@ KBUILD_CFLAGS += $(call cc-disable-warning, pointer-sign)
 
 # disable invalid "can't wrap" optimizations for signed / pointers
 KBUILD_CFLAGS	+= $(call cc-option,-fno-strict-overflow)
+
+# conserve stack if available
+KBUILD_CFLAGS   += $(call cc-option,-fconserve-stack)
+
+# disallow errors like 'EXPORT_GPL(foo);' with missing header
+KBUILD_CFLAGS   += $(call cc-option,-Werror=implicit-int)
+
+# require functions to have arguments in prototypes, not empty 'int foo()'
+KBUILD_CFLAGS   += $(call cc-option,-Werror=strict-prototypes)
 
 # use the deterministic mode of AR if available
 KBUILD_ARFLAGS := $(call ar-option,D)
