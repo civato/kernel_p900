@@ -22,14 +22,8 @@ OBJS		+= sdhi-sh7372.o
 endif
 
 AFLAGS_head.o += -DTEXT_OFFSET=$(TEXT_OFFSET)
-
-AFLAGS_head.o += -Wa,-mcpu=cortex-a15
-AFLAGS_misc.o +=-Wa,-mcpu=cortex-a15
-AFLAGS_decompress.o += -Wa,-mcpu=cortex-a15
-
 HEAD	= head.o
-DECOMPRESS = decompress.o
-MISC = misc.o
+OBJS	+= misc.o decompress.o
 FONTC	= $(srctree)/drivers/video/console/font_acorn_8x8.c
 
 # string library code (-Os is enforced to keep it much smaller)
@@ -120,10 +114,7 @@ endif
 targets       := vmlinux vmlinux.lds \
 		 piggy.$(suffix_y) piggy.$(suffix_y).o \
 		 lib1funcs.o lib1funcs.S ashldi3.o ashldi3.S \
-		 font.o font.c head.o misc.o decompress.o $(OBJS)
-
-AFLAGS_piggy.o += -Wa,-mcpu=cortex-a15
-AFLAGS_piggy.$(suffix_y).o += -Wa,-mcpu=cortex-a15
+		 font.o font.c head.o misc.o $(OBJS)
 
 # Make sure files are removed during clean
 extra-y       += piggy.gzip piggy.lzo piggy.lzma piggy.xzkern \
@@ -158,7 +149,6 @@ LDFLAGS_vmlinux += -X
 LDFLAGS_vmlinux += -T
 
 # For __aeabi_uidivmod
-AFLAGS_lib1funcs.o +=-Wa,-mcpu=cortex-a15
 lib1funcs = $(obj)/lib1funcs.o
 
 $(obj)/lib1funcs.S: $(srctree)/arch/$(SRCARCH)/lib/lib1funcs.S
@@ -167,7 +157,6 @@ $(obj)/lib1funcs.S: $(srctree)/arch/$(SRCARCH)/lib/lib1funcs.S
 # For __aeabi_llsl
 ashldi3 = $(obj)/ashldi3.o
 
-AFLAGS_ashldi3.o +=-Wa,-mcpu=cortex-a15
 $(obj)/ashldi3.S: $(srctree)/arch/$(SRCARCH)/lib/ashldi3.S
 	$(call cmd,shipped)
 
@@ -191,7 +180,7 @@ if [ $(words $(ZRELADDR)) -gt 1 -a "$(CONFIG_AUTO_ZRELADDR)" = "" ]; then \
 	false; \
 fi
 
-$(obj)/vmlinux: $(obj)/vmlinux.lds $(obj)/$(HEAD) $(obj)/$(MISC) $(obj)/$(DECOMPRESS) $(obj)/piggy.$(suffix_y).o \
+$(obj)/vmlinux: $(obj)/vmlinux.lds $(obj)/$(HEAD) $(obj)/piggy.$(suffix_y).o \
 		$(addprefix $(obj)/, $(OBJS)) $(lib1funcs) $(ashldi3) FORCE
 	@$(check_for_multiple_zreladdr)
 	$(call if_changed,ld)
